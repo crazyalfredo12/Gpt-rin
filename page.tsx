@@ -1,41 +1,31 @@
 'use client';
-
 import { useState } from 'react';
 
-export default function Home() {
+export default function Page() {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [messages, setMessages] = useState([]);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
-    const userMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [...messages, userMessage] })
+      body: JSON.stringify({ message: input }),
     });
     const data = await res.json();
-    setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+    setMessages([...messages, { role: 'user', content: input }, { role: 'assistant', content: data.message }]);
+    setInput('');
   };
 
   return (
-    <main style={{ padding: 20, fontFamily: 'sans-serif' }}>
-      <h1>Rin Companion</h1>
-      <div style={{ marginBottom: 20 }}>
+    <main style={{ padding: 20 }}>
+      <h1>Rin Companion Chat</h1>
+      <div>
         {messages.map((m, i) => (
-          <div key={i}><b>{m.role === 'user' ? 'You' : 'Rin'}:</b> {m.content}</div>
+          <p key={i}><strong>{m.role}:</strong> {m.content}</p>
         ))}
       </div>
-      <input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Say something..."
-        style={{ width: '80%', padding: 10 }}
-      />
-      <button onClick={sendMessage} style={{ padding: 10, marginLeft: 10 }}>Send</button>
+      <input value={input} onChange={e => setInput(e.target.value)} placeholder="Say something..." />
+      <button onClick={sendMessage}>Send</button>
     </main>
   );
 }
